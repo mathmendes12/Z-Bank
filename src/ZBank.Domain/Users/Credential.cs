@@ -10,7 +10,7 @@ public class Credential
     public string? TotpSecret { get; private set; }
     public bool TotpEnabled { get; private set; }
 
-    private Credential() { } // EF Core
+    private Credential() { PasswordHash = null!; } // EF Core
 
     public Credential(Guid userId, string passwordHash)
     {

@@ -11,7 +11,11 @@ public class Device
     public bool IsTrusted { get; private set; }
     public DateTime CreatedAt { get; private set; }
 
-    private Device() { }
+    private Device() 
+    { 
+        PublicKey = null!; 
+        DeviceName = null!;
+    }
 
     public Device(Guid userId, string publicKey, string deviceName, bool isTrusted = false)
     {

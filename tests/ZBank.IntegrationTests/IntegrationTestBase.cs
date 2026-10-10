@@ -12,8 +12,7 @@ namespace ZBank.IntegrationTests;
 
 public abstract class IntegrationTestBase : IAsyncLifetime
 {
-    private readonly PostgreSqlContainer _dbContainer = new PostgreSqlBuilder()
-        .WithImage("postgres:15-alpine")
+    private readonly PostgreSqlContainer _dbContainer = new PostgreSqlBuilder("postgres:15-alpine")
         .WithDatabase("zbank_test")
         .WithUsername("postgres")
         .WithPassword("postgres")

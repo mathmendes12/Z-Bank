@@ -11,7 +11,7 @@ public class Session
     public DateTime ExpiresAt { get; private set; }
     public bool IsRevoked { get; private set; }
 
-    private Session() { }
+    private Session() { RefreshTokenHash = null!; }
 
     public Session(Guid userId, Guid deviceId, string refreshTokenHash, DateTime expiresAt)
     {
