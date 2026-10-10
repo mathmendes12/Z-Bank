@@ -33,6 +33,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   runtimeVersion: {
     policy: "fingerprint",
   },
+  updates: {
+    url: "https://u.expo.dev/COLOQUE_AQUI_APOS_EAS_INIT"
+  },
   extra: {
     // `eas init` tenta preencher este campo automaticamente; se não conseguir (app.config.ts
     // não é editado pela CLI), colar aqui o ID impresso pelo comando — ver README "Rodando no
