@@ -16,6 +16,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     supportsTablet: true,
   },
   android: {
+    package: "com.zbank.app",
     adaptiveIcon: {
       backgroundColor: "#111111",
       foregroundImage: "./assets/android-icon-foreground.png",
