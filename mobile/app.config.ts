@@ -27,7 +27,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   web: {
     favicon: "./assets/favicon.png",
   },
-  plugins: ["expo-router"],
+  plugins: ["expo-router", "expo-secure-store", "expo-local-authentication"],
   // Política "fingerprint": o app nunca recebe uma atualização OTA incompatível com o build
   // nativo instalado (ver seção 8 da spec do MVP).
   runtimeVersion: {

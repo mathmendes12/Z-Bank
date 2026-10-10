@@ -1,7 +1,19 @@
-// Cliente HTTP mínimo da Fase 0 — só prova que o app alcança a API pelo túnel. Vira um client
-// mais completo (interceptor de token, retry) a partir da Fase 1.
+import axios from 'axios';
+import * as SecureStore from 'expo-secure-store';
 
-const apiUrl = process.env.EXPO_PUBLIC_API_URL;
+const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
+
+export const api = axios.create({
+  baseURL: apiUrl,
+});
+
+api.interceptors.request.use(async (config) => {
+  const token = await SecureStore.getItemAsync('access_token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
 
 export type HealthResponse = {
   status: string;
@@ -9,16 +21,6 @@ export type HealthResponse = {
 };
 
 export async function fetchHealth(): Promise<HealthResponse> {
-  if (!apiUrl) {
-    throw new Error(
-      "EXPO_PUBLIC_API_URL não está definida — configure mobile/.env a partir do .env.example."
-    );
-  }
-
-  const response = await fetch(`${apiUrl}/health`);
-  if (!response.ok) {
-    throw new Error(`GET /health respondeu ${response.status}`);
-  }
-
-  return (await response.json()) as HealthResponse;
+  const response = await api.get('/health');
+  return response.data;
 }

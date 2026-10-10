@@ -1,59 +1,49 @@
-import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, SafeAreaView, Text, View } from "react-native";
-import { Button } from "../src/design-system/Button";
-import { useTokens } from "../src/design-system/useTokens";
-import { spacing, typography } from "../src/design-system/tokens";
-import { fetchHealth, type HealthResponse } from "../src/services/api";
+import { useState } from 'react';
+import { View, Text, TextInput, StyleSheet } from 'react-native';
+import { useRouter } from 'expo-router';
+import { api } from '../src/services/api';
+import { Button } from '../src/design-system/Button';
+import { useTokens } from '../src/design-system/useTokens';
+import { spacing } from '../src/design-system/tokens';
 
-type LoadState =
-  | { status: "loading" }
-  | { status: "success"; data: HealthResponse }
-  | { status: "error"; message: string };
+export default function Index() {
+  const [inviteCode, setInviteCode] = useState('');
+  const [error, setError] = useState('');
+  const router = useRouter();
+  const colors = useTokens();
 
-// Tela única da Fase 0: prova o critério de pronto — o app, instalado via EAS, chama a API
-// local pelo túnel e mostra a resposta de /health.
-export default function HealthScreen() {
-  const tokens = useTokens();
-  const [state, setState] = useState<LoadState>({ status: "loading" });
-
-  const check = useCallback(() => {
-    setState({ status: "loading" });
-    fetchHealth()
-      .then((data) => setState({ status: "success", data }))
-      .catch((error: unknown) =>
-        setState({
-          status: "error",
-          message: error instanceof Error ? error.message : "Erro desconhecido",
-        })
-      );
-  }, []);
-
-  useEffect(() => {
-    check();
-  }, [check]);
+  const handleValidateInvite = async () => {
+    try {
+      setError('');
+      await api.post('/api/v1/invitations/validate', { code: inviteCode });
+      router.push('/register');
+    } catch (err) {
+      setError('Convite inválido ou expirado');
+    }
+  };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: tokens.background }}>
-      <View style={{ flex: 1, justifyContent: "center", padding: spacing.lg, gap: spacing.md }}>
-        <Text style={{ color: tokens.textPrimary, ...typography.display }}>Z Bank</Text>
-        <Text style={{ color: tokens.textSecondary, ...typography.body }}>
-          Fase 0 — conexão com a API local pelo túnel.
-        </Text>
-
-        {state.status === "loading" && <ActivityIndicator color={tokens.primary} />}
-
-        {state.status === "success" && (
-          <Text style={{ color: tokens.success, ...typography.body }}>
-            {state.data.service}: {state.data.status}
-          </Text>
-        )}
-
-        {state.status === "error" && (
-          <Text style={{ color: tokens.error, ...typography.body }}>{state.message}</Text>
-        )}
-
-        <Button label="Tentar de novo" onPress={check} />
+    <View style={[styles.container, { backgroundColor: colors.background, padding: spacing.lg }]}>
+      <Text style={{ color: colors.textPrimary, fontSize: 24, marginBottom: spacing.md }}>
+        Bem-vindo ao ZBank
+      </Text>
+      <TextInput
+        style={[styles.input, { borderColor: colors.primary, color: colors.textPrimary, marginBottom: spacing.sm }]}
+        placeholder="Código do Convite"
+        placeholderTextColor={colors.textPrimary + '80'}
+        value={inviteCode}
+        onChangeText={setInviteCode}
+      />
+      {error ? <Text style={{ color: colors.error, marginBottom: spacing.sm }}>{error}</Text> : null}
+      <Button onPress={handleValidateInvite} label="Entrar com Convite" />
+      <View style={{ marginTop: spacing.md }}>
+        <Button onPress={() => router.push('/login')} label="Já tenho conta (Login)" />
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: { flex: 1, justifyContent: 'center' },
+  input: { borderWidth: 1, padding: 12, borderRadius: 8 },
+});
