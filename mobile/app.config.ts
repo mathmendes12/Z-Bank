@@ -34,14 +34,11 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     policy: "fingerprint",
   },
   updates: {
-    url: "https://u.expo.dev/COLOQUE_AQUI_APOS_EAS_INIT"
+    url: "https://u.expo.dev/72341510-d05b-4302-858b-20a0244cc950"
   },
   extra: {
-    // `eas init` tenta preencher este campo automaticamente; se não conseguir (app.config.ts
-    // não é editado pela CLI), colar aqui o ID impresso pelo comando — ver README "Rodando no
-    // celular Android".
     eas: {
-      projectId: "COLOQUE_AQUI_APOS_EAS_INIT",
+      projectId: "72341510-d05b-4302-858b-20a0244cc950",
     },
   },
 });
