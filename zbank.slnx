@@ -1,0 +1,16 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/ZBank.Api.Customer/ZBank.Api.Customer.csproj" />
+    <Project Path="src/ZBank.Application/ZBank.Application.csproj" />
+    <Project Path="src/ZBank.Backoffice/ZBank.Backoffice.csproj" />
+    <Project Path="src/ZBank.Domain/ZBank.Domain.csproj" />
+    <Project Path="src/ZBank.Infrastructure/ZBank.Infrastructure.csproj" />
+    <Project Path="src/ZBank.MerchantSimulator/ZBank.MerchantSimulator.csproj" />
+    <Project Path="src/ZBank.Worker/ZBank.Worker.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ZBank.Application.Tests/ZBank.Application.Tests.csproj" />
+    <Project Path="tests/ZBank.Domain.Tests/ZBank.Domain.Tests.csproj" />
+    <Project Path="tests/ZBank.IntegrationTests/ZBank.IntegrationTests.csproj" />
+  </Folder>
+</Solution>

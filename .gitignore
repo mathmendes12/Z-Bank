@@ -1,0 +1,25 @@
+# .NET
+bin/
+obj/
+*.user
+
+# Node / Expo
+node_modules/
+.expo/
+dist/
+web-build/
+
+# Env
+.env
+.env.local
+
+# Editor / OS
+.vs/
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Docker volumes locais (dados de dev)
+infra/.pgdata/

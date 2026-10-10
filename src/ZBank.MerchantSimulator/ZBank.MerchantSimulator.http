@@ -1,0 +1,6 @@
+@ZBank.MerchantSimulator_HostAddress = http://localhost:5182
+
+GET {{ZBank.MerchantSimulator_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
