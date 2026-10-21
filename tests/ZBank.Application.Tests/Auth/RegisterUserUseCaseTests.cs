@@ -15,6 +15,7 @@ public class RegisterUserUseCaseTests
     private readonly Mock<IUserRepository> _userRepoMock;
     private readonly Mock<ICredentialRepository> _credentialRepoMock;
     private readonly Mock<IPasswordHasher> _passwordHasherMock;
+    private readonly Mock<ITokenService> _tokenServiceMock;
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
     private readonly RegisterUserUseCase _useCase;
 
@@ -24,6 +25,7 @@ public class RegisterUserUseCaseTests
         _userRepoMock = new Mock<IUserRepository>();
         _credentialRepoMock = new Mock<ICredentialRepository>();
         _passwordHasherMock = new Mock<IPasswordHasher>();
+        _tokenServiceMock = new Mock<ITokenService>();
         _unitOfWorkMock = new Mock<IUnitOfWork>();
 
         _useCase = new RegisterUserUseCase(
@@ -31,6 +33,7 @@ public class RegisterUserUseCaseTests
             _userRepoMock.Object,
             _credentialRepoMock.Object,
             _passwordHasherMock.Object,
+            _tokenServiceMock.Object,
             _unitOfWorkMock.Object
         );
     }
@@ -50,11 +53,17 @@ public class RegisterUserUseCaseTests
             .Setup(h => h.Hash(request.Password))
             .Returns("hashed_password");
 
+        _tokenServiceMock
+            .Setup(t => t.GenerateSetupToken(It.IsAny<Guid>()))
+            .Returns("mock_setup_token");
+
         // Act
         var result = await _useCase.ExecuteAsync(request);
 
         // Assert
         Assert.True(result.IsSuccess);
+        Assert.NotNull(result.UserId);
+        Assert.Equal("mock_setup_token", result.SetupToken);
         
         Assert.Equal(InvitationStatus.Used, invitation.Status);
         _invitationRepoMock.Verify(r => r.UpdateAsync(invitation), Times.Once);

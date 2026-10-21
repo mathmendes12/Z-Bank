@@ -48,6 +48,7 @@ public interface ITotpService
 public interface ITokenService
 {
     (string AccessToken, string RefreshToken) GenerateTokens(Guid userId, Guid deviceId);
+    string GenerateSetupToken(Guid userId);
     string HashRefreshToken(string refreshToken);
 }
 

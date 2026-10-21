@@ -1,13 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using ZBank.Application.Common.Interfaces;
 
 namespace ZBank.Application.Auth;
-
-public class SetupTotpRequest
-{
-    public Guid UserId { get; set; }
-}
 
 public class SetupTotpResponse
 {
@@ -27,13 +23,13 @@ public class SetupTotpUseCase
         _uow = uow;
     }
 
-    public async Task<SetupTotpResponse> ExecuteAsync(SetupTotpRequest request)
+    public async Task<SetupTotpResponse> ExecuteAsync(Guid userId)
     {
-        var credential = await _credentialRepository.GetByUserIdAsync(request.UserId);
-        if (credential == null) throw new Exception("User credentials not found");
+        var credential = await _credentialRepository.GetByUserIdAsync(userId);
+        if (credential == null) throw new KeyNotFoundException("User credentials not found.");
         
         var secret = _totpService.GenerateSecret();
-        credential.EnableTotp(secret);
+        credential.SetTotpSecret(secret);
         
         await _uow.CommitAsync();
         

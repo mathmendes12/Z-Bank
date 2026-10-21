@@ -20,12 +20,26 @@ public class Credential
         TotpEnabled = false;
     }
 
-    public void EnableTotp(string secret)
+    public void SetTotpSecret(string secret)
     {
         if (string.IsNullOrWhiteSpace(secret))
             throw new ArgumentException("TOTP Secret cannot be empty", nameof(secret));
-        
+
         TotpSecret = secret;
+        TotpEnabled = false;
+    }
+
+    public void ConfirmTotp()
+    {
+        if (string.IsNullOrWhiteSpace(TotpSecret))
+            throw new InvalidOperationException("Cannot confirm TOTP without a secret.");
+
         TotpEnabled = true;
+    }
+
+    public void EnableTotp(string secret)
+    {
+        SetTotpSecret(secret);
+        ConfirmTotp();
     }
 }

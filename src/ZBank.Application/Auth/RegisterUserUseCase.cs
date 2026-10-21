@@ -8,7 +8,7 @@ namespace ZBank.Application.Auth;
 
 public record RegisterUserRequest(string InvitationCode, string Cpf, string Password);
 
-public record RegisterUserResponse(bool IsSuccess, string? ErrorMessage = null);
+public record RegisterUserResponse(bool IsSuccess, Guid? UserId = null, string? SetupToken = null, string? ErrorMessage = null);
 
 public class RegisterUserUseCase
 {
@@ -16,6 +16,7 @@ public class RegisterUserUseCase
     private readonly IUserRepository _userRepository;
     private readonly ICredentialRepository _credentialRepository;
     private readonly IPasswordHasher _passwordHasher;
+    private readonly ITokenService _tokenService;
     private readonly IUnitOfWork _unitOfWork;
 
     public RegisterUserUseCase(
@@ -23,12 +24,14 @@ public class RegisterUserUseCase
         IUserRepository userRepository,
         ICredentialRepository credentialRepository,
         IPasswordHasher passwordHasher,
+        ITokenService tokenService,
         IUnitOfWork unitOfWork)
     {
         _invitationRepository = invitationRepository;
         _userRepository = userRepository;
         _credentialRepository = credentialRepository;
         _passwordHasher = passwordHasher;
+        _tokenService = tokenService;
         _unitOfWork = unitOfWork;
     }
 
@@ -38,7 +41,7 @@ public class RegisterUserUseCase
 
         if (invitation == null || invitation.Status == InvitationStatus.Used)
         {
-            return new RegisterUserResponse(false, "Invalid or already used invitation.");
+            return new RegisterUserResponse(false, ErrorMessage: "Invalid or already used invitation.");
         }
 
         invitation.Use();
@@ -53,6 +56,8 @@ public class RegisterUserUseCase
 
         await _unitOfWork.CommitAsync();
 
-        return new RegisterUserResponse(true);
+        var setupToken = _tokenService.GenerateSetupToken(user.Id);
+
+        return new RegisterUserResponse(true, user.Id, setupToken);
     }
 }

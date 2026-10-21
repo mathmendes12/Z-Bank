@@ -15,7 +15,7 @@ public class TokenService : ITokenService
 
     public TokenService(IConfiguration configuration)
     {
-        var secretKey = configuration["Jwt:SecretKey"] 
+        var secretKey = configuration["Jwt:SecretKey"]
             ?? throw new InvalidOperationException("Jwt:SecretKey configuration is required.");
 
         _key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey.PadRight(32, '0')));
@@ -45,6 +45,25 @@ public class TokenService : ITokenService
         var refreshToken = Convert.ToBase64String(randomNumber);
 
         return (accessToken, refreshToken);
+    }
+
+    public string GenerateSetupToken(Guid userId)
+    {
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var tokenDescriptor = new SecurityTokenDescriptor
+        {
+            Subject = new ClaimsIdentity(new[]
+            {
+                new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
+                new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
+                new Claim("scope", "totp_setup")
+            }),
+            Expires = DateTime.UtcNow.AddMinutes(15),
+            SigningCredentials = new SigningCredentials(_key, SecurityAlgorithms.HmacSha256Signature)
+        };
+
+        var token = tokenHandler.CreateToken(tokenDescriptor);
+        return tokenHandler.WriteToken(token);
     }
 
     public string HashRefreshToken(string refreshToken)

@@ -11,6 +11,7 @@ public static class DependencyInjection
         services.AddScoped<ValidateInvitationUseCase>();
         services.AddScoped<RegisterUserUseCase>();
         services.AddScoped<SetupTotpUseCase>();
+        services.AddScoped<ConfirmTotpUseCase>();
         services.AddScoped<LoginUseCase>();
         services.AddScoped<RefreshTokensUseCase>();
         services.AddScoped<RegisterDeviceUseCase>();
