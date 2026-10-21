@@ -15,8 +15,8 @@ export default function Index() {
   const handleValidateInvite = async () => {
     try {
       setError('');
-      await api.post('/api/v1/invitations/validate', { code: inviteCode });
-      router.push('/register');
+      await api.post('/api/v1/invitations/validate', { code: inviteCode.trim() });
+      router.push({ pathname: '/register', params: { inviteCode: inviteCode.trim() } });
     } catch (err) {
       setError('Convite inválido ou expirado');
     }
@@ -33,6 +33,7 @@ export default function Index() {
         placeholderTextColor={colors.textPrimary + '80'}
         value={inviteCode}
         onChangeText={setInviteCode}
+        autoCapitalize="characters"
       />
       {error ? <Text style={{ color: colors.error, marginBottom: spacing.sm }}>{error}</Text> : null}
       <Button onPress={handleValidateInvite} label="Entrar com Convite" />
