@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using ZBank.Domain.Invitations;
 using ZBank.Domain.Users;
+using ZBank.Domain.Auth;
 using ZBank.Application.Common.Interfaces;
 using System.Threading.Tasks;
 
@@ -13,8 +14,9 @@ public class AppDbContext : DbContext, IUnitOfWork
     public DbSet<Invitation> Invitations { get; set; } = null!;
     public DbSet<User> Users { get; set; } = null!;
     public DbSet<Credential> Credentials { get; set; } = null!;
-    public DbSet<ZBank.Domain.Auth.Device> Devices { get; set; } = null!;
-    public DbSet<ZBank.Domain.Auth.Session> Sessions { get; set; } = null!;
+    public DbSet<Device> Devices { get; set; } = null!;
+    public DbSet<Session> Sessions { get; set; } = null!;
+    public DbSet<BiometricChallenge> BiometricChallenges { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -39,10 +41,9 @@ public class AppDbContext : DbContext, IUnitOfWork
             entity.Property(e => e.PasswordHash).IsRequired();
             entity.Property(e => e.TotpSecret).HasMaxLength(100);
             entity.Property(e => e.TotpEnabled).IsRequired();
-            // Don't setup navigation property directly to keep them fully decoupled
         });
 
-        modelBuilder.Entity<ZBank.Domain.Auth.Device>(entity =>
+        modelBuilder.Entity<Device>(entity =>
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.PublicKey).IsRequired();
@@ -50,7 +51,7 @@ public class AppDbContext : DbContext, IUnitOfWork
             entity.HasIndex(e => e.UserId);
         });
 
-        modelBuilder.Entity<ZBank.Domain.Auth.Session>(entity =>
+        modelBuilder.Entity<Session>(entity =>
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.RefreshTokenHash).IsRequired();
@@ -58,7 +59,12 @@ public class AppDbContext : DbContext, IUnitOfWork
             entity.HasIndex(e => e.DeviceId);
         });
 
-        base.OnModelCreating(modelBuilder);
+        modelBuilder.Entity<BiometricChallenge>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Nonce).IsRequired().HasMaxLength(100);
+            entity.HasIndex(e => new { e.DeviceId, e.Nonce });
+        });
     }
 
     public async Task CommitAsync()

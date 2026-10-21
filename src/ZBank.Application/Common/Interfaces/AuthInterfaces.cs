@@ -33,6 +33,12 @@ public interface ISessionRepository
     Task RevokeAllUserSessionsAsync(Guid userId);
 }
 
+public interface IBiometricChallengeRepository
+{
+    Task AddAsync(BiometricChallenge challenge);
+    Task<BiometricChallenge?> GetValidChallengeAsync(Guid deviceId, string nonce);
+}
+
 public interface IPasswordHasher
 {
     string Hash(string password);

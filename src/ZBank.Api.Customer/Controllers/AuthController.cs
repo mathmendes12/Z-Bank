@@ -73,9 +73,9 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("biometric/challenge")]
-    public async Task<IActionResult> Challenge([FromServices] BiometricChallengeUseCase useCase)
+    public async Task<IActionResult> Challenge([FromServices] BiometricChallengeUseCase useCase, [FromBody] BiometricChallengeRequest request)
     {
-        var response = await useCase.ExecuteAsync();
+        var response = await useCase.ExecuteAsync(request);
         return Ok(response);
     }
 

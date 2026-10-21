@@ -17,6 +17,7 @@ public class BiometricLoginUseCase
 {
     private readonly IUserRepository _userRepository;
     private readonly IDeviceRepository _deviceRepository;
+    private readonly IBiometricChallengeRepository _challengeRepository;
     private readonly ICryptoService _cryptoService;
     private readonly ITokenService _tokenService;
     private readonly ISessionRepository _sessionRepository;
@@ -25,6 +26,7 @@ public class BiometricLoginUseCase
     public BiometricLoginUseCase(
         IUserRepository userRepository,
         IDeviceRepository deviceRepository,
+        IBiometricChallengeRepository challengeRepository,
         ICryptoService cryptoService,
         ITokenService tokenService,
         ISessionRepository sessionRepository,
@@ -32,6 +34,7 @@ public class BiometricLoginUseCase
     {
         _userRepository = userRepository;
         _deviceRepository = deviceRepository;
+        _challengeRepository = challengeRepository;
         _cryptoService = cryptoService;
         _tokenService = tokenService;
         _sessionRepository = sessionRepository;
@@ -41,13 +44,19 @@ public class BiometricLoginUseCase
     public async Task<LoginResponse> ExecuteAsync(BiometricLoginRequest request)
     {
         var user = await _userRepository.GetByCpfAsync(request.Cpf);
-        if (user == null) throw new Exception("Invalid user");
+        if (user == null) throw new UnauthorizedAccessException("Usuário inválido.");
 
         var device = await _deviceRepository.GetByUserIdAndIdAsync(user.Id, request.DeviceId);
-        if (device == null || !device.IsTrusted) throw new Exception("Device not found or not trusted");
+        if (device == null || !device.IsTrusted) throw new UnauthorizedAccessException("Dispositivo não encontrado ou não confiável.");
+
+        var challenge = await _challengeRepository.GetValidChallengeAsync(request.DeviceId, request.Nonce);
+        if (challenge == null || !challenge.IsValid())
+            throw new UnauthorizedAccessException("Desafio biométrico inválido ou expirado.");
+
+        challenge.MarkAsUsed();
 
         var isValidSignature = _cryptoService.VerifySignature(device.PublicKey, request.Nonce, request.Signature);
-        if (!isValidSignature) throw new Exception("Invalid biometric signature");
+        if (!isValidSignature) throw new UnauthorizedAccessException("Assinatura biométrica inválida.");
 
         var (accessToken, refreshToken) = _tokenService.GenerateTokens(user.Id, device.Id);
         
