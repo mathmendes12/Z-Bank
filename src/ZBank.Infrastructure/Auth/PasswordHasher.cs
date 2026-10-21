@@ -1,3 +1,4 @@
+using System;
 using System.Text;
 using Isopoh.Cryptography.Argon2;
 using ZBank.Application.Common.Interfaces;
@@ -15,7 +16,7 @@ public class PasswordHasher : IPasswordHasher
         
         var config = new Argon2Config
         {
-            Type = Argon2Type.DataIndependentAddressing, // Argon2id
+            Type = Argon2Type.HybridAddressing, // Argon2id
             Version = Argon2Version.Nineteen,
             TimeCost = 3,
             MemoryCost = 65536,

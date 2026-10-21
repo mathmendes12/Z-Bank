@@ -3,6 +3,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using ZBank.Application.Common.Interfaces;
 
@@ -10,12 +11,14 @@ namespace ZBank.Infrastructure.Auth;
 
 public class TokenService : ITokenService
 {
-    private const string SecretKey = "zbank-super-secret-key-for-development-purposes";
     private readonly SymmetricSecurityKey _key;
 
-    public TokenService()
+    public TokenService(IConfiguration configuration)
     {
-        _key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(SecretKey.PadRight(32, '0')));
+        var secretKey = configuration["Jwt:SecretKey"] 
+            ?? throw new InvalidOperationException("Jwt:SecretKey configuration is required.");
+
+        _key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey.PadRight(32, '0')));
     }
 
     public (string AccessToken, string RefreshToken) GenerateTokens(Guid userId, Guid deviceId)
@@ -25,6 +28,7 @@ public class TokenService : ITokenService
         {
             Subject = new ClaimsIdentity(new[]
             {
+                new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
                 new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
                 new Claim("DeviceId", deviceId.ToString())
             }),
