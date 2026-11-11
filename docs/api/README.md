@@ -34,6 +34,7 @@ renomear campo, mudar tipo, mudar enum): exige `/v2`.
 `POST /auth/biometric/challenge`, `POST /auth/biometric/login`.
 
 `/auth/totp/setup` e `/auth/totp/confirm` exigem o `setupToken` emitido no cadastro.
+Hoje o código ainda não impede o uso cruzado dos dois tipos de token; ver a divergência 9 na seção 6 do spec.
 `/health` fica fora do contrato `v1`.
 
 ## Estado de conformidade

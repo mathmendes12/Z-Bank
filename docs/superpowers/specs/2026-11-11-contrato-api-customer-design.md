@@ -81,20 +81,26 @@ de conformidade é ligada junto de cada correção, para o CI não nascer quebra
 | 1 | `GlobalExceptionHandlerMiddleware` devolve `exception.Message` ao cliente, formato `{ statusCode, message }` | `problem+json` com `code`; mensagem genérica no 500; sem texto de exceção |
 | 2 | `/invitations/validate` e `/auth/login` sem rate limit (enumeração/força bruta) | Rate limit nessas rotas (**segurança**) |
 | 3 | `AddAuthorization()` sem política de fallback; `AccountsController` sem `[Authorize]` | Fallback exigindo usuário autenticado; `[AllowAnonymous]` explícito nas públicas |
-| 4 | `totp/confirm` devolve 200 com `isSuccess=false` | 422 `INVALID_TOTP` |
+| 4 | Código TOTP inválido faz `ConfirmTotpUseCase.cs:35` lançar `UnauthorizedAccessException`, então o cliente recebe 401 com o texto da exceção (o app leria como sessão expirada); em sucesso devolve 200 `{ isSuccess: true }`, e o contrato diz 204 | 422 `INVALID_TOTP`; sucesso 204 |
 | 5 | `invitations/validate` devolve 400 para código inválido | 200 `{ isValid: false }` |
 | 6 | Extrato expõe a entidade de domínio `LedgerEntry` | DTO próprio |
 | 7 | Extrato com `page`/`limit` (padrão 50) | Cursor, padrão 20, máx 100 |
 | 8 | `/auth/refresh` recebe `userId` do cliente | Derivar usuário do refresh token (**segurança**) |
+| 9 | O `setupToken` (claim `scope=totp_setup`, emitido em `TokenService.cs:59`) é aceito em qualquer rota `[Authorize]`, e o `accessToken` é aceito em `/auth/totp/setup` e `/auth/totp/confirm`: nada no código verifica o `scope` (não há `RequireClaim` nem policy). Consequências: (a) register → setupToken → `POST /devices/register` (cria dispositivo com `IsTrusted=true`) → challenge e `biometric/login` dá sessão completa sem nunca configurar TOTP, porque `BiometricLoginUseCase` não checa `TotpEnabled`; (b) um accessToken roubado chama `/auth/totp/setup`, que zera `TotpEnabled` (`Credential.SetTotpSecret`), e o atacante confirma um segredo que conhece. | Policies separadas por tipo de token (`totp_setup` só nas rotas de TOTP; accessToken nas demais); `biometric/login` passa a exigir `TotpEnabled` (**segurança**) |
+| 10 | Status codes do código divergem do contrato: login com falha lança `Exception` simples (`LoginUseCase.cs:53-62`) e vira 500, contrato diz 401; refresh com falha idem (`RefreshTokensUseCase.cs:40,49,54`) e vira 500, contrato diz 401; register com convite inválido ou usado devolve 400 `{ message }` (`AuthController.cs:34`), contrato diz 422 `INVALID_INVITATION` | Lançar `UnauthorizedAccessException` (ou exceção de domínio mapeada) em login/refresh; 422 no register |
 
-Itens 1, 2 e 8 são de segurança e devem passar pelo `security-specialist`.
+Itens 1, 2, 8 e 9 são de segurança e devem passar pelo `security-specialist`. O item 9 já existia
+antes desta branch (não foi introduzido por ela).
 
 ## 7. Ordem de execução
 
 1. Mergear a Fase 1 na `master` (feito localmente em `9aa698b`, ainda sem push).
 2. Contrato (YAML, README, ADR 0005) + lint + teste de conformidade etapa 1.
 3. Rebasear `feat/fase-2-ledger` sobre a `master` e regenerar a migration da Fase 2 depois de
-   `AddBiometricChallenges`.
+   `AddBiometricChallenges`. O rebase deve incluir, no mínimo, `[Authorize]` no
+   `AccountsController` (correção 3): ao esvaziar `PendingInCode`, o teste
+   `Authentication_requirement_matches_the_contract` falha nas duas rotas de conta e o CI ficaria
+   vermelho.
 4. Correções 1–8 da seção 6, cada uma com seu teste e ligando a etapa 2 do conformidade.
 5. Geração de tipos TS no mobile e remoção dos tipos manuais.
 

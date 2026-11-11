@@ -38,8 +38,9 @@ uso e mudança incompatível custa caro.
 
 - Toda mudança de API começa por um diff no YAML.
 - O contrato descreve o estado-alvo; as divergências do código atual (seção 6 do spec) viram tarefas
-  próprias, três delas de segurança (formato de erro sem vazar exceção, rate limit, `refresh` sem
-  `userId` do cliente).
+  próprias, quatro delas de segurança (formato de erro sem vazar exceção, rate limit, `refresh` sem
+  `userId` do cliente, escopo do `setupToken`).
 - As rotas de conta (Fase 2) constam no contrato mas ficam numa lista de pendências do teste até a
-  Fase 2 ser rebaseada na `master`.
+  Fase 2 ser rebaseada na `master`. O rebase da Fase 2 deve incluir `[Authorize]` no
+  `AccountsController`, senão o CI fica vermelho.
 - Os tipos TypeScript do mobile passam a ser gerados do YAML em um plano posterior.

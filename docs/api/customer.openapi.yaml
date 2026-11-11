@@ -4,7 +4,7 @@ info:
   version: 1.0.0
   description: >-
     Contrato da API do app cliente do ZBank. Este arquivo é a fonte de verdade: o código se
-    conforma a ele, e um teste de integração quebra se divergirem. Convenções transversais
+    conforma a ele, e um teste de integração quebra se rotas, métodos ou exigência de autenticação divergirem (schemas entram na etapa 2). Convenções transversais
     estão em docs/api/README.md.
 servers:
   - url: /api/v1
