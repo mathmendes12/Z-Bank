@@ -1,0 +1,440 @@
+openapi: 3.1.0
+info:
+  title: ZBank Customer API
+  version: 1.0.0
+  description: >-
+    Contrato da API do app cliente do ZBank. Este arquivo é a fonte de verdade: o código se
+    conforma a ele, e um teste de integração quebra se divergirem. Convenções transversais
+    estão em docs/api/README.md.
+servers:
+  - url: /api/v1
+tags:
+  - name: Invitations
+    description: Validação de convites de cadastro.
+  - name: Auth
+    description: Cadastro, TOTP, login e renovação de sessão.
+  - name: Devices
+    description: Dispositivos confiáveis do cliente.
+  - name: Accounts
+    description: Saldo e extrato da conta.
+security:
+  - bearerAuth: []
+paths:
+  /invitations/validate:
+    post:
+      operationId: validateInvitation
+      tags: [Invitations]
+      summary: Valida um código de convite
+      description: Rota pública. Código inválido ou já usado responde 200 com isValid=false.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ValidateInvitationRequest' }
+      responses:
+        '200':
+          description: Resultado da validação.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ValidateInvitationResponse' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+        default: { $ref: '#/components/responses/InternalError' }
+  /auth/register:
+    post:
+      operationId: registerUser
+      tags: [Auth]
+      summary: Cadastra um usuário com convite válido
+      description: Devolve um setupToken de curta duração, usado só para configurar o TOTP.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RegisterRequest' }
+      responses:
+        '200':
+          description: Usuário criado.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RegisterResponse' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        default: { $ref: '#/components/responses/InternalError' }
+  /auth/totp/setup:
+    post:
+      operationId: setupTotp
+      tags: [Auth]
+      summary: Gera o segredo TOTP do usuário autenticado
+      description: Exige o setupToken (Bearer) emitido no cadastro.
+      responses:
+        '200':
+          description: Segredo gerado; o TOTP só é ativado após a confirmação.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SetupTotpResponse' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        default: { $ref: '#/components/responses/InternalError' }
+  /auth/totp/confirm:
+    post:
+      operationId: confirmTotp
+      tags: [Auth]
+      summary: Confirma o TOTP com um código de 6 dígitos
+      description: Exige o setupToken (Bearer). Código inválido responde 422 com code INVALID_TOTP.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ConfirmTotpRequest' }
+      responses:
+        '204':
+          description: TOTP ativado.
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        default: { $ref: '#/components/responses/InternalError' }
+  /auth/login:
+    post:
+      operationId: login
+      tags: [Auth]
+      summary: Login com CPF, senha e código TOTP
+      description: Rota pública, com limite de taxa.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LoginRequest' }
+      responses:
+        '200':
+          description: Sessão criada.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LoginResponse' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+        default: { $ref: '#/components/responses/InternalError' }
+  /auth/refresh:
+    post:
+      operationId: refreshTokens
+      tags: [Auth]
+      summary: Renova o par de tokens
+      description: O usuário é derivado do refresh token, nunca informado pelo cliente.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RefreshRequest' }
+      responses:
+        '200':
+          description: Novo par de tokens.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RefreshResponse' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        default: { $ref: '#/components/responses/InternalError' }
+  /auth/biometric/challenge:
+    post:
+      operationId: createBiometricChallenge
+      tags: [Auth]
+      summary: Emite um nonce de uso único para o login biométrico
+      description: Rota pública. O nonce é de uso único e expira em pouco tempo.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/BiometricChallengeRequest' }
+      responses:
+        '200':
+          description: Nonce emitido.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/BiometricChallengeResponse' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        default: { $ref: '#/components/responses/InternalError' }
+  /auth/biometric/login:
+    post:
+      operationId: biometricLogin
+      tags: [Auth]
+      summary: Login com assinatura do dispositivo sobre o nonce
+      description: Rota pública. Valida a assinatura do dispositivo sobre o nonce emitido.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/BiometricLoginRequest' }
+      responses:
+        '200':
+          description: Sessão criada.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LoginResponse' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        default: { $ref: '#/components/responses/InternalError' }
+  /devices/register:
+    post:
+      operationId: registerDevice
+      tags: [Devices]
+      summary: Registra a chave pública do dispositivo do usuário autenticado
+      description: Exige accessToken (Bearer). Associa a chave pública ao usuário autenticado.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RegisterDeviceRequest' }
+      responses:
+        '200':
+          description: Dispositivo registrado.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RegisterDeviceResponse' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        default: { $ref: '#/components/responses/InternalError' }
+  /accounts/me/balance:
+    get:
+      operationId: getBalance
+      tags: [Accounts]
+      summary: Saldo atual da conta do usuário autenticado
+      description: Exige accessToken (Bearer). O saldo é sempre o da conta do próprio usuário.
+      responses:
+        '200':
+          description: Saldo em centavos.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/BalanceResponse' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        default: { $ref: '#/components/responses/InternalError' }
+  /accounts/me/statement:
+    get:
+      operationId: getStatement
+      tags: [Accounts]
+      summary: Extrato paginado por cursor, do mais recente para o mais antigo
+      description: Exige accessToken (Bearer). Use nextCursor da resposta para buscar a página seguinte.
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Página do extrato.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StatementResponse' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        default: { $ref: '#/components/responses/InternalError' }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: accessToken, ou setupToken nas rotas de configuração de TOTP.
+  parameters:
+    Limit:
+      name: limit
+      in: query
+      description: Itens por página. Acima de 100 responde 400.
+      schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+    Cursor:
+      name: cursor
+      in: query
+      description: Valor opaco devolvido em nextCursor na página anterior.
+      schema: { type: string }
+  responses:
+    BadRequest:
+      description: Requisição inválida (validação).
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/ValidationProblem' }
+    Unauthorized:
+      description: Credencial ausente, inválida ou expirada.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    NotFound:
+      description: Recurso não encontrado.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    Unprocessable:
+      description: Regra de negócio violada; o campo code identifica qual.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    TooManyRequests:
+      description: Limite de taxa excedido.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    InternalError:
+      description: Erro inesperado. Resposta genérica, sem detalhe interno.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+  schemas:
+    Cents:
+      type: integer
+      format: int64
+      description: Valor em centavos. Negativo é débito, positivo é crédito.
+      examples: [-1050]
+    OperationType:
+      type: string
+      enum: [Deposit, Transfer, Withdrawal]
+    Problem:
+      type: object
+      description: Erro no formato RFC 9457, com a extensão code.
+      required: [type, title, status, code]
+      properties:
+        type: { type: string, examples: ['https://zbank/errors/account-not-found'] }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+        code:
+          type: string
+          description: Identificador estável em SCREAMING_SNAKE; o app traduz por ele.
+          examples: [ACCOUNT_NOT_FOUND]
+        traceId: { type: string }
+    ValidationProblem:
+      allOf:
+        - $ref: '#/components/schemas/Problem'
+        - type: object
+          required: [errors]
+          properties:
+            errors:
+              type: array
+              items:
+                type: object
+                required: [field, code]
+                properties:
+                  field: { type: string }
+                  code: { type: string }
+    ValidateInvitationRequest:
+      type: object
+      additionalProperties: false
+      required: [code]
+      properties:
+        code: { type: string }
+    ValidateInvitationResponse:
+      type: object
+      required: [isValid]
+      properties:
+        isValid: { type: boolean }
+    RegisterRequest:
+      type: object
+      additionalProperties: false
+      required: [invitationCode, cpf, password]
+      properties:
+        invitationCode: { type: string }
+        cpf: { type: string, description: CPF do cliente }
+        password: { type: string, format: password }
+    RegisterResponse:
+      type: object
+      required: [userId, setupToken]
+      properties:
+        userId: { type: string, format: uuid }
+        setupToken: { type: string }
+    SetupTotpResponse:
+      type: object
+      required: [totpSecret]
+      properties:
+        totpSecret: { type: string }
+    ConfirmTotpRequest:
+      type: object
+      additionalProperties: false
+      required: [totpCode]
+      properties:
+        totpCode: { type: string, pattern: '^[0-9]{6}$' }
+    LoginRequest:
+      type: object
+      additionalProperties: false
+      required: [cpf, password, totpCode]
+      properties:
+        cpf: { type: string }
+        password: { type: string, format: password }
+        totpCode: { type: string, pattern: '^[0-9]{6}$' }
+    LoginResponse:
+      type: object
+      required: [accessToken, refreshToken, deviceId]
+      properties:
+        accessToken: { type: string }
+        refreshToken: { type: string }
+        deviceId: { type: string, format: uuid }
+    RefreshRequest:
+      type: object
+      additionalProperties: false
+      required: [deviceId, refreshToken]
+      properties:
+        deviceId: { type: string, format: uuid }
+        refreshToken: { type: string }
+    RefreshResponse:
+      type: object
+      required: [accessToken, refreshToken]
+      properties:
+        accessToken: { type: string }
+        refreshToken: { type: string }
+    BiometricChallengeRequest:
+      type: object
+      additionalProperties: false
+      required: [deviceId]
+      properties:
+        deviceId: { type: string, format: uuid }
+    BiometricChallengeResponse:
+      type: object
+      required: [nonce]
+      properties:
+        nonce: { type: string }
+    BiometricLoginRequest:
+      type: object
+      additionalProperties: false
+      required: [cpf, deviceId, nonce, signature]
+      properties:
+        cpf: { type: string }
+        deviceId: { type: string, format: uuid }
+        nonce: { type: string }
+        signature: { type: string }
+    RegisterDeviceRequest:
+      type: object
+      additionalProperties: false
+      required: [publicKey, deviceName]
+      properties:
+        publicKey: { type: string }
+        deviceName: { type: string }
+    RegisterDeviceResponse:
+      type: object
+      required: [deviceId]
+      properties:
+        deviceId: { type: string, format: uuid }
+    BalanceResponse:
+      type: object
+      required: [balance]
+      properties:
+        balance: { $ref: '#/components/schemas/Cents' }
+    LedgerEntry:
+      type: object
+      required: [id, amount, operationType, transactionGroupId, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        amount: { $ref: '#/components/schemas/Cents' }
+        operationType: { $ref: '#/components/schemas/OperationType' }
+        transactionGroupId: { type: string, format: uuid }
+        createdAt: { type: string, format: date-time }
+    StatementResponse:
+      type: object
+      required: [items, nextCursor]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/LedgerEntry' }
+        nextCursor:
+          type: [string, 'null']
+          description: Nulo quando não há mais páginas.
