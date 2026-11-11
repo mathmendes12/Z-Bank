@@ -9,6 +9,7 @@
     <Project Path="src/ZBank.Worker/ZBank.Worker.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/ZBank.Api.Customer.Tests/ZBank.Api.Customer.Tests.csproj" />
     <Project Path="tests/ZBank.Application.Tests/ZBank.Application.Tests.csproj" />
     <Project Path="tests/ZBank.Domain.Tests/ZBank.Domain.Tests.csproj" />
     <Project Path="tests/ZBank.IntegrationTests/ZBank.IntegrationTests.csproj" />

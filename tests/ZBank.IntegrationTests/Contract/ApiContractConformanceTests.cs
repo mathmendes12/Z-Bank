@@ -9,8 +9,6 @@ public class ApiContractConformanceTests
     // Ao rebasear a Fase 2, Pending_list_has_no_stale_entries obriga a esvaziar esta lista.
     private static readonly HashSet<OperationKey> PendingInCode = new()
     {
-        new("GET", "/api/v1/accounts/me/balance"),
-        new("GET", "/api/v1/accounts/me/statement"),
     };
 
     [Fact]

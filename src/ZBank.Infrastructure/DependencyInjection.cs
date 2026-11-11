@@ -22,6 +22,9 @@ public static class DependencyInjection
         services.AddScoped<IDeviceRepository, DeviceRepository>();
         services.AddScoped<ISessionRepository, SessionRepository>();
         services.AddScoped<IBiometricChallengeRepository, BiometricChallengeRepository>();
+        services.AddScoped<IAccountRepository, AccountRepository>();
+        services.AddScoped<ILedgerEntryRepository, LedgerEntryRepository>();
+        
         services.AddSingleton<IPasswordHasher, PasswordHasher>();
         services.AddSingleton<ITotpService, TotpService>();
         services.AddSingleton<ITokenService, TokenService>();

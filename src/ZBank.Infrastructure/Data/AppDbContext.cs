@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using ZBank.Domain.Invitations;
 using ZBank.Domain.Users;
 using ZBank.Domain.Auth;
+using ZBank.Domain.Accounts;
 using ZBank.Application.Common.Interfaces;
 using System.Threading.Tasks;
 
@@ -17,6 +18,8 @@ public class AppDbContext : DbContext, IUnitOfWork
     public DbSet<Device> Devices { get; set; } = null!;
     public DbSet<Session> Sessions { get; set; } = null!;
     public DbSet<BiometricChallenge> BiometricChallenges { get; set; } = null!;
+    public DbSet<Account> Accounts { get; set; } = null!;
+    public DbSet<LedgerEntry> LedgerEntries { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -65,6 +68,23 @@ public class AppDbContext : DbContext, IUnitOfWork
             entity.Property(e => e.Nonce).IsRequired().HasMaxLength(100);
             entity.HasIndex(e => new { e.DeviceId, e.Nonce });
         });
+
+        modelBuilder.Entity<Account>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.UserId).IsUnique();
+            entity.Property(e => e.Balance).IsRequired();
+        });
+
+        modelBuilder.Entity<LedgerEntry>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.AccountId);
+            entity.HasIndex(e => e.TransactionGroupId);
+            entity.Property(e => e.Amount).IsRequired();
+        });
+
+        base.OnModelCreating(modelBuilder);
     }
 
     public async Task CommitAsync()

@@ -23,3 +23,8 @@ Thumbs.db
 
 # Docker volumes locais (dados de dev)
 infra/.pgdata/
+
+# SQLite de desenvolvimento local
+*.db
+*.db-shm
+*.db-wal

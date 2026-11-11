@@ -1,6 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
 using ZBank.Application.Auth;
 using ZBank.Application.Invitations;
+using ZBank.Application.Ledger;
+using ZBank.Application.Accounts;
 
 namespace ZBank.Application;
 
@@ -17,6 +19,10 @@ public static class DependencyInjection
         services.AddScoped<RegisterDeviceUseCase>();
         services.AddScoped<BiometricChallengeUseCase>();
         services.AddScoped<BiometricLoginUseCase>();
+        
+        services.AddScoped<ILedgerTransactionService, LedgerTransactionService>();
+        services.AddScoped<IGetBalanceUseCase, GetBalanceUseCase>();
+        services.AddScoped<IGetStatementUseCase, GetStatementUseCase>();
 
         return services;
     }
