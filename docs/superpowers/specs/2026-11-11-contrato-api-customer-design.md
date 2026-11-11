@@ -24,11 +24,14 @@ OpenAPI 3.1 em YAML, **spec-first**: o arquivo é a fonte de verdade e o código
 ## 3. Verificação
 
 1. **Lint** da spec com Spectral como passo do CI.
-2. **Teste de conformidade** em `ZBank.IntegrationTests`: sobe a API com `WebApplicationFactory`,
-   obtém `/openapi/v1.json` (gerado por `AddOpenApi()`) e compara com o YAML.
-   - Etapa 1 (liga já): toda rota+método do contrato existe no código e vice-versa; toda rota sem
-     `security: []` exige autenticação no código.
-   - Etapa 2 (liga junto de cada correção): schemas, `required` e enums.
+2. **Teste de conformidade** em `ZBank.IntegrationTests`, sobe a API com `WebApplicationFactory`.
+   O `AddOpenApi()` do .NET não emite `security` a partir de `[Authorize]`, então:
+   - Etapa 1 (liga já): lê os endpoints registrados (`EndpointDataSource`, `IAuthorizeData`,
+     `IAllowAnonymous` e política de fallback) e confere que toda rota+método do contrato existe no
+     código e vice-versa, e que a exigência de autenticação bate. Rotas ainda ausentes na `master`
+     (conta, Fase 2) ficam numa lista de pendências que o próprio teste obriga a esvaziar.
+   - Etapa 2 (liga junto de cada correção): compara schemas, `required` e enums contra o
+     `/openapi/v1.json` gerado.
 3. **Mobile:** tipos TS gerados com `openapi-typescript` a partir do YAML, substituindo os tipos
    escritos à mão em `mobile/src/services/`.
 
