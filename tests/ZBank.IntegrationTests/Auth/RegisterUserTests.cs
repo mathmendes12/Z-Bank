@@ -36,7 +36,7 @@ public class RegisterUserTests : IntegrationTestBase
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var updatedInvitation = await context.Invitations.FirstOrDefaultAsync(i => i.Code == "REG-CODE-123");
+        var updatedInvitation = await context.Invitations.AsNoTracking().FirstOrDefaultAsync(i => i.Code == "REG-CODE-123");
         Assert.Equal(InvitationStatus.Used, updatedInvitation!.Status);
 
         var user = await context.Users.FirstOrDefaultAsync(u => u.Cpf == "12345678901");
