@@ -101,7 +101,7 @@ antes desta branch (não foi introduzido por ela).
    `AccountsController` (correção 3): ao esvaziar `PendingInCode`, o teste
    `Authentication_requirement_matches_the_contract` falha nas duas rotas de conta e o CI ficaria
    vermelho.
-4. Correções 1–8 da seção 6, cada uma com seu teste e ligando a etapa 2 do conformidade.
+4. Correções 1–10 da seção 6, cada uma com seu teste e ligando a etapa 2 do conformidade.
 5. Geração de tipos TS no mobile e remoção dos tipos manuais.
 
 ## 8. Riscos e pontos em aberto
