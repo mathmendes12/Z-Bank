@@ -20,6 +20,7 @@
     <PackageReference Include="Testcontainers.PostgreSql" Version="4.16.0" />
     <PackageReference Include="xunit" Version="2.9.3" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
+    <PackageReference Include="YamlDotNet" Version="16.3.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -31,6 +32,10 @@
     <ProjectReference Include="..\..\src\ZBank.Infrastructure\ZBank.Infrastructure.csproj" />
     <ProjectReference Include="..\..\src\ZBank.Application\ZBank.Application.csproj" />
     <ProjectReference Include="..\..\src\ZBank.Domain\ZBank.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\docs\api\customer.openapi.yaml" Link="contract\customer.openapi.yaml" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>
