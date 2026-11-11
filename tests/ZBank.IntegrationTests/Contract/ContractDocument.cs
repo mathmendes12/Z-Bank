@@ -3,8 +3,22 @@ using YamlDotNet.Serialization;
 
 namespace ZBank.IntegrationTests.Contract;
 
+/// <summary>
+/// Chave de operação. Method e Route são comparados ignorando a caixa (o roteamento do ASP.NET
+/// é case-insensitive e [controller] expande capitalizado). Só a caixa é ignorada: nomes de
+/// parâmetros de path ({id} vs {accountId}) não são normalizados.
+/// </summary>
 public readonly record struct OperationKey(string Method, string Route)
 {
+    public bool Equals(OperationKey other) =>
+        string.Equals(Method, other.Method, StringComparison.OrdinalIgnoreCase) &&
+        string.Equals(Route, other.Route, StringComparison.OrdinalIgnoreCase);
+
+    public override int GetHashCode() =>
+        HashCode.Combine(
+            StringComparer.OrdinalIgnoreCase.GetHashCode(Method ?? string.Empty),
+            StringComparer.OrdinalIgnoreCase.GetHashCode(Route ?? string.Empty));
+
     public override string ToString() => $"{Method} {Route}";
 }
 

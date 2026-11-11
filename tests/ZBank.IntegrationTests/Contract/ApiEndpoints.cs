@@ -19,8 +19,7 @@ public static class ApiEndpoints
         var result = new Dictionary<OperationKey, bool>();
         foreach (var endpoint in dataSource.Endpoints.OfType<RouteEndpoint>())
         {
-            // [controller] expande para "Auth"/"Devices"; o roteamento ignora caixa e o contrato usa minúsculas.
-            var route = ("/" + (endpoint.RoutePattern.RawText ?? string.Empty).TrimStart('/')).ToLowerInvariant();
+            var route = "/" + (endpoint.RoutePattern.RawText ?? string.Empty).TrimStart('/');
             if (!route.StartsWith(Prefix, StringComparison.OrdinalIgnoreCase)) continue;
 
             var methods = endpoint.Metadata.GetMetadata<IHttpMethodMetadata>()?.HttpMethods;
